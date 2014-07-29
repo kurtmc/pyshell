@@ -1,3 +1,9 @@
 #!/usr/bin/python3
 
-print("pysh>");
+def main():
+	while True:
+		input("pysh> ");
+		
+
+if __name__ == "__main__":
+	main()
