@@ -1,33 +1,22 @@
 #!/usr/bin/python3
-import os
-import subprocess
-import socket
-
-def stripByteArray(byteArray):
-	return str(byteArray[:len(byteArray)-1].decode("utf-8"))
-
-def getPrompt():
-	proc = subprocess.Popen(["whoami"], stdout=subprocess.PIPE, shell=True)
-	(out, err) = proc.communicate()
-	# Get user information so that it can be displayed on command line input
-	username = stripByteArray(out)
-	proc = subprocess.Popen(["uname", "-n"], stdout=subprocess.PIPE, shell=True)
-	(out, err) = proc.communicate()
-	host = socket.gethostname()#stripByteArray(out)	
-	proc = subprocess.Popen(["pwd"], stdout=subprocess.PIPE, shell=True)
-	(out, err) = proc.communicate()
-	pwd = stripByteArray(out)
-	return username + "@" + host + ":" + pwd + "> "
+import curses
+from prompt import Prompt
 
 def main():
-	while True:
-		command = input(getPrompt());
-		runCommand(command)
-def runCommand(command):
-	os.system(command)
-	#subprocess.call(command)
-	
-		
+    # Setup curses
+    # documentation https://docs.python.org/3.3/howto/curses.html
+    # https://docs.python.org/3/library/curses.html
+    stdscr = curses.initscr()
+
+
+    while True:
+        c = stdscr.getch()
+        if c == ord('p'):
+            print("yay print document")
+        elif c == ord('q'):
+            break  # Exit the while loop
+        elif c == curses.KEY_HOME:
+            x = y = 0
 
 if __name__ == "__main__":
-	main()
+    main()
