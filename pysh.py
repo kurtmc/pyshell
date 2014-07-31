@@ -1,8 +1,7 @@
 #!/usr/bin/python3
 import curses
 from os import execvp
-from os import fork
-from os import pipe
+import os
 from prompt import Prompt
 
 def main():
@@ -27,17 +26,18 @@ def main():
         #/* for commands not part of the shell command language */
         #if (fork() == 0)
         #{
-        if fork() == 0:
+        if os.fork() == 0:
 
         #   if (/* piping */)
         #   {
-            if False:
+            if "|" in commandLine:
         #      pipe(fildes);
-                (read, write) = pipe()
+                (read, write) = os.pipe()
         #      if (fork() == 0)
         #      {
-                if fork() == 0:
-                    pass
+                if os.fork() == 0: # Child process
+                    os.close(read)
+                    write = os.fdopen(write, 'w')
         #         /* first component of command line */
         #         close(stdout);
         #         dup(fildes[1]);
@@ -46,7 +46,11 @@ def main():
         #         /* stdout now goes to pipe */
         #         /* child process does command */
         #         execlp(command1, command1, 0);
+                    os.execlp(commandLine)
         #      }
+                # Parent process
+                os.close(write)
+                read = os.fdopen(read)
         #      /* second component of command line */
         #      close(stdin);
         #      dup(fildes[0]);
@@ -63,8 +67,6 @@ def main():
         #if (amper == 0)
         #   retid = wait(&status);
 
-
-        execvp(commandLine, ["/home/kurt/workspace"])
 
 if __name__ == "__main__":
     main()
