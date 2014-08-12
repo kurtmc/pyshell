@@ -21,31 +21,27 @@ def main():
     # https://docs.python.org/3/library/curses.html
     #stdscr = curses.initscr()
 
-    currentDirectory = os.getcwd()
-    print(currentDirectory)
-
-
     while True:
-        #/* read command line until “end of file” */
-        #/* parse command line */
+
+        # Read in command
         commandLine = input("$ ")
-        """Break the line into shell words.
-        """
+
+        # Turn commandLine input into words in list
         lexer = shlex.shlex(commandLine, posix=True)
         lexer.whitespace_split = False
         lexer.wordchars += '#$+-,./?@^='
         args = list(lexer)
-        
 
+        # Set ampersand flag
         if "&" in commandLine:
             amper = True
         else:
             amper = False
 
+        # If it is a built in command it can be done in the parent?
         if is_builtin(args[0]):
             do_builtin(args)
-        else:
-
+        else: # Else do things in the child process
 
             pid = os.fork()
             if pid == 0:
@@ -69,9 +65,9 @@ def main():
 
 
 
+        # Wait for the command if no ampersand and not built in
         if amper == False and not is_builtin(args[0]):
             os.wait()
-
 
 if __name__ == "__main__":
     main()
