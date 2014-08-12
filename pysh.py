@@ -7,7 +7,7 @@ import shlex
 history = list()
 
 def is_builtin(command):
-    if command in ["cd", "history"]:
+    if command in ["cd", "history", "exit"]:
         return True
     else:
         return False
@@ -31,6 +31,10 @@ def do_builtin(args):
             index = int(args[1]) - 10 + hist_len - 2
 
         execute_args(history[index])
+
+    # exit
+    if args[0] == "exit":
+        exit()
 
 def execute_args(args):
     # store command in history
