@@ -68,14 +68,21 @@ def main():
         #      /* standard input now comes from the pipe */
         #   }
         #   execve(command2, command2, 0);
-            execvp(args)
+            print(args[0])
+            print(args[1:])
+            if len(args[1:]) == 0:
+              execvp(args[0], [''])
+              #execvp(args[0], args[1:])
+            else:
+              execvp(args[0], args[1:])
         #}
         #/* parent continues over here...
         #* waits for child to exit if required
         #*/
         #if (amper == 0)
         #   retid = wait(&status);
-        os.wait()
+        if amper == False:
+            os.wait()
 
 
 if __name__ == "__main__":
