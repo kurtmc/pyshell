@@ -33,8 +33,10 @@ def main():
         args = list(lexer)
 
         # Set ampersand flag
-        if "&" in commandLine:
+        if "&" == args[-1]:
             amper = True
+            args = args[:-1]
+            print(args)
         else:
             amper = False
 
