@@ -45,11 +45,8 @@ def main():
                 read = os.fdopen(read)
 
 
-            if len(args[1:]) == 0:
-              os.execvp(args[0], [''])
-              #execvp(args[0], args[1:])
-            else:
-              os.execvp(args[0], args)
+              
+            os.execvp(args[0], args)
 
         if amper == False:
             os.wait()
