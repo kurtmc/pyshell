@@ -4,6 +4,8 @@ import os
 from prompt import Prompt
 import shlex
 
+history = list()
+
 def is_builtin(command):
     if command in ["cd", "history"]:
         return True
@@ -14,11 +16,16 @@ def do_builtin(args):
     if args[0] == "cd":
         os.chdir(args[1])
     if args[0] == "history" and len(args[1:]) == 0:
-        print("yay history")
+        for i in range(len(history)):
+            print(str(i+1) + ": " + str.join(" ", history[i]))
     elif args[0] == "history" and len(args[1:]) != 0:
-        print("history " + str(args))
+        to_exec = int(args[1])
+        execute_args(history[to_exec - 1])
 
 def execute_args(args):
+    # store command in history
+    history.append(args)
+
     # If it is a built in command it can be done in the parent?
     if is_builtin(args[0]):
         do_builtin(args)
@@ -50,8 +57,6 @@ def main():
     # https://docs.python.org/3/library/curses.html
     #stdscr = curses.initscr()
 
-    history = list()
-
     while True:
 
         # Read in command
@@ -78,8 +83,12 @@ def main():
 
 
         # Wait for the command if no ampersand and not built in
-        if amper == False and not is_builtin(args[0]):
-            os.wait()
+        if amper == False:
+            try:
+                os.wait()
+            except ChildProcessError:
+                pass
+
 
 if __name__ == "__main__":
     main()
