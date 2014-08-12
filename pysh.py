@@ -13,18 +13,30 @@ def is_builtin(command):
         return False
 
 def do_builtin(args):
+    # cd
     if args[0] == "cd":
         os.chdir(args[1])
+
+    # history
     if args[0] == "history" and len(args[1:]) == 0:
-        for i in range(len(history)):
-            print(str(i+1) + ": " + str.join(" ", history[i]))
+        hist_len = len(history)
+        for_range = 10 if hist_len > 10 else hist_len
+        for i in range(for_range):
+            print(str(i+1) + ": " + str.join(" ", history[hist_len - for_range + i]))
     elif args[0] == "history" and len(args[1:]) != 0:
-        to_exec = int(args[1])
-        execute_args(history[to_exec - 1])
+        hist_len = len(history)
+        if hist_len < 11:
+            index = int(args[1]) - 1
+        else:
+            index = int(args[1]) - 10 + hist_len - 2
+
+        execute_args(history[index])
 
 def execute_args(args):
     # store command in history
+    global history
     history.append(args)
+
 
     # If it is a built in command it can be done in the parent?
     if is_builtin(args[0]):
