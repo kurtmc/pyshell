@@ -7,7 +7,7 @@ import shlex
 history = list()
 
 def is_builtin(command):
-    if command in ["cd", "history", "exit"]:
+    if command in ["cd", "history", "h", "exit"]:
         return True
     else:
         return False
@@ -18,12 +18,12 @@ def do_builtin(args):
         os.chdir(args[1])
 
     # history
-    if args[0] == "history" and len(args[1:]) == 0:
+    if (args[0] == "history" or args[0] == "h") and len(args[1:]) == 0:
         hist_len = len(history)
         for_range = 10 if hist_len > 10 else hist_len
         for i in range(for_range):
             print(str(i+1) + ": " + str.join(" ", history[hist_len - for_range + i]))
-    elif args[0] == "history" and len(args[1:]) != 0:
+    elif (args[0] == "history" or args[0] == "h") and len(args[1:]) != 0:
         hist_len = len(history)
         if hist_len < 11:
             index = int(args[1]) - 1
