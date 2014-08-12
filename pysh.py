@@ -4,11 +4,25 @@ import os
 from prompt import Prompt
 import shlex
 
+def is_builtin(command):
+    if command in ["cd"]:
+        return True
+    else:
+        return False
+
+def do_builtin(args):
+    if args[0] == "cd":
+        os.chdir(args[1])
+
+
 def main():
     # Setup curses
     # documentation https://docs.python.org/3.3/howto/curses.html
     # https://docs.python.org/3/library/curses.html
     #stdscr = curses.initscr()
+
+    currentDirectory = os.getcwd()
+    print(currentDirectory)
 
 
     while True:
@@ -28,27 +42,34 @@ def main():
         else:
             amper = False
 
-
-        pid = os.fork()
-        if pid == 0:
-            if "|" in commandLine:
-
-                (read, write) = os.pipe()
-
-                if os.fork() == 0: # Child process
-                    os.close(read)
-                    write = os.fdopen(write, 'w')
-
-                    os.execlp(commandLine)
-
-                os.close(write)
-                read = os.fdopen(read)
+        if is_builtin(args[0]):
+            do_builtin(args)
+        else:
 
 
-              
-            os.execvp(args[0], args)
+            pid = os.fork()
+            if pid == 0:
+                if "|" in commandLine:
 
-        if amper == False:
+                    (read, write) = os.pipe()
+
+                    if os.fork() == 0: # Child process
+                        os.close(read)
+                        write = os.fdopen(write, 'w')
+
+                        os.execlp(commandLine)
+
+                    os.close(write)
+                    read = os.fdopen(read)
+
+
+                # Check if command ins build in and execute, else use os.execvp
+                if not is_builtin(args[0]):
+                    os.execvp(args[0], args)
+
+
+
+        if amper == False and not is_builtin(args[0]):
             os.wait()
 
 
