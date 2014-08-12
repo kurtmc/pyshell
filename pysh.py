@@ -3,6 +3,7 @@ import curses
 from os import execvp
 import os
 from prompt import Prompt
+import shlex
 
 def main():
     # Setup curses
@@ -15,6 +16,13 @@ def main():
         #/* read command line until “end of file” */
         #/* parse command line */
         commandLine = input("$ ")
+        """Break the line into shell words.
+        """
+        lexer = shlex.shlex(commandLine, posix=True)
+        lexer.whitespace_split = False
+        lexer.wordchars += '#$+-,./?@^='
+        args = list(lexer)
+        
         #if (/* command line contains & */)
         #   amper = 1;
         #else
@@ -26,7 +34,8 @@ def main():
         #/* for commands not part of the shell command language */
         #if (fork() == 0)
         #{
-        if os.fork() == 0:
+        pid = os.fork()
+        if pid == 0:
 
         #   if (/* piping */)
         #   {
@@ -59,13 +68,14 @@ def main():
         #      /* standard input now comes from the pipe */
         #   }
         #   execve(command2, command2, 0);
-            execvp(commandLine, [""])
+            execvp(args)
         #}
         #/* parent continues over here...
         #* waits for child to exit if required
         #*/
         #if (amper == 0)
         #   retid = wait(&status);
+        os.wait()
 
 
 if __name__ == "__main__":
