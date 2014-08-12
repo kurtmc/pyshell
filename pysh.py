@@ -5,7 +5,7 @@ from prompt import Prompt
 import shlex
 
 def is_builtin(command):
-    if command in ["cd"]:
+    if command in ["cd", "history"]:
         return True
     else:
         return False
@@ -13,6 +13,35 @@ def is_builtin(command):
 def do_builtin(args):
     if args[0] == "cd":
         os.chdir(args[1])
+    if args[0] == "history" and len(args[1:]) == 0:
+        print("yay history")
+    elif args[0] == "history" and len(args[1:]) != 0:
+        print("history " + str(args))
+
+def execute_args(args):
+    # If it is a built in command it can be done in the parent?
+    if is_builtin(args[0]):
+        do_builtin(args)
+    else:  # Else do things in the child process
+        pid = os.fork()
+        if pid == 0:
+            if "|" in args:
+
+                (read, write) = os.pipe()
+
+                if os.fork() == 0: # Child process
+                    os.close(read)
+                    write = os.fdopen(write, 'w')
+
+                    os.execlp(args)
+
+                os.close(write)
+                read = os.fdopen(read)
+
+
+            # Check if command ins build in and execute, else use os.execvp
+            if not is_builtin(args[0]):
+                os.execvp(args[0], args)
 
 
 def main():
@@ -20,6 +49,8 @@ def main():
     # documentation https://docs.python.org/3.3/howto/curses.html
     # https://docs.python.org/3/library/curses.html
     #stdscr = curses.initscr()
+
+    history = list()
 
     while True:
 
@@ -40,30 +71,9 @@ def main():
         else:
             amper = False
 
-        # If it is a built in command it can be done in the parent?
-        if is_builtin(args[0]):
-            do_builtin(args)
-        else: # Else do things in the child process
 
-            pid = os.fork()
-            if pid == 0:
-                if "|" in commandLine:
+        execute_args(args)
 
-                    (read, write) = os.pipe()
-
-                    if os.fork() == 0: # Child process
-                        os.close(read)
-                        write = os.fdopen(write, 'w')
-
-                        os.execlp(commandLine)
-
-                    os.close(write)
-                    read = os.fdopen(read)
-
-
-                # Check if command ins build in and execute, else use os.execvp
-                if not is_builtin(args[0]):
-                    os.execvp(args[0], args)
 
 
 
