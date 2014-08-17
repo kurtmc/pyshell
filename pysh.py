@@ -87,17 +87,6 @@ def main():
     # https://docs.python.org/3/library/curses.html
     # stdscr = curses.initscr()
 
-    # for line in fileinput.input():
-    #    if line is None:
-    #        break
-    #
-    #    sys.stdout.write(PROMPT + line)
-    #    execute_args(get_args_from_string(line))
-    #    try:
-    #        os.wait()
-    #    except ChildProcessError:
-    #        pass
-    #print("Got to loop")
     while True:
 
         # Read in command
