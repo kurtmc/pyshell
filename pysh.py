@@ -49,7 +49,7 @@ def execute_args(args):
 
     pid = os.fork()
     if pid == 0:
-        if "|" in args:  # Piping
+        while "|" in args:  # Piping
 
             pipe_index = args.index("|")
             first_command = args[0]
