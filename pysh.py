@@ -51,16 +51,30 @@ def execute_args(args):
     if pid == 0:
         if "|" in args:  # Piping
 
+            pipe_index = args.index("|")
+            first_command = args[0]
+            first_args = args[0:pipe_index]
+
+            args = args[pipe_index + 1:]
+
+            #pipe = os.pipe()
             (read, write) = os.pipe()
 
             if os.fork() == 0:  # Child process
-                os.close(read)
-                write = os.fdopen(write, 'w')
+                # First component of command line
 
-                os.execlp(args)
+                #os.close(sys.stdout)
+                #os.open(write)
+                #sys.stdout.close()
+                os.dup2(write, sys.stdout.fileno())
+                # stdout now goes to pipe
+                # child process does command
+                os.execvp(first_command, first_args)
 
-            os.close(write)
-            read = os.fdopen(read)
+            # Second component of command line
+            #sys.stdin.close()
+            os.dup2(read, sys.stdin.fileno())
+            # standard input now comes from the pipe
 
 
 
