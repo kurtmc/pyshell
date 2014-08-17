@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import curses
+import fileinput
 import os
 import sys
 from prompt import Prompt
@@ -67,6 +68,13 @@ def execute_args(args):
         if not is_builtin(args[0]):
             os.execvp(args[0], args)
 
+def get_args_from_string(input_args):
+    lexer = shlex.shlex(input_args, posix=True)
+    lexer.whitespace_split = False
+    lexer.wordchars += '#$+-,./?@^='
+    args = list(lexer)
+    return args
+
 
 def main():
     # Setup curses
@@ -74,17 +82,17 @@ def main():
     # https://docs.python.org/3/library/curses.html
     #stdscr = curses.initscr()
 
+    for line in fileinput.input():
+        pass
+
     while True:
 
         # Read in command
-        commandLine = input("$ ")
+        commandLine = input("psh> ")
 
         # Turn commandLine input into words in list
-        lexer = shlex.shlex(commandLine, posix=True)
-        lexer.whitespace_split = False
-        lexer.wordchars += '#$+-,./?@^='
-        args = list(lexer)
-
+        args = get_args_from_string(commandLine)
+        
         # Set ampersand flag
         if "&" == args[-1]:
             amper = True
