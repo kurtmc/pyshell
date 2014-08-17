@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import fileinput
 import os
+import stat
 import sys
 import shlex
 
@@ -8,11 +9,13 @@ history = list()
 
 PROMPT = "psh> "
 
+
 def is_builtin(command):
     if command in ["cd", "history", "h", "exit"]:
         return True
     else:
         return False
+
 
 def do_builtin(args):
     # cd
@@ -24,7 +27,7 @@ def do_builtin(args):
         hist_len = len(history)
         for_range = 10 if hist_len > 10 else hist_len
         for i in range(for_range):
-            print(str(i+1) + ": " + str.join(" ", history[hist_len - for_range + i]))
+            print(str(i + 1) + ": " + str.join(" ", history[hist_len - for_range + i]))
     elif (args[0] == "history" or args[0] == "h") and len(args[1:]) != 0:
         hist_len = len(history)
         if hist_len < 11:
@@ -44,14 +47,13 @@ def execute_args(args):
     global history
     history.append(args)
 
-
     pid = os.fork()
     if pid == 0:
-        if "|" in args:
+        if "|" in args:  # Piping
 
             (read, write) = os.pipe()
 
-            if os.fork() == 0: # Child process
+            if os.fork() == 0:  # Child process
                 os.close(read)
                 write = os.fdopen(write, 'w')
 
@@ -60,13 +62,16 @@ def execute_args(args):
             os.close(write)
             read = os.fdopen(read)
 
+
+
         # If it is a built in command it can be done in the parent?
         if is_builtin(args[0]):
             do_builtin(args)
-            sys.exit(0) # Kill the child process
+            sys.exit(0)  # Kill the child process
         # Check if command ins build in and execute, else use os.execvp
         if not is_builtin(args[0]):
             os.execvp(args[0], args)
+
 
 def get_args_from_string(input_args):
     lexer = shlex.shlex(input_args, posix=True)
@@ -80,26 +85,36 @@ def main():
     # Setup curses
     # documentation https://docs.python.org/3.3/howto/curses.html
     # https://docs.python.org/3/library/curses.html
-    #stdscr = curses.initscr()
+    # stdscr = curses.initscr()
 
-    for line in fileinput.input():
-        sys.stdout.write(PROMPT + line)
-        execute_args(get_args_from_string(line))
-        try:
-            os.wait()
-        except ChildProcessError:
-            pass
-
+    # for line in fileinput.input():
+    #    if line is None:
+    #        break
+    #
+    #    sys.stdout.write(PROMPT + line)
+    #    execute_args(get_args_from_string(line))
+    #    try:
+    #        os.wait()
+    #    except ChildProcessError:
+    #        pass
+    #print("Got to loop")
     while True:
 
         # Read in command
         try:
-            commandLine = input(PROMPT)
-        except EOFError: # If there is an EOFError then input was piped in and the shell should be terminated
+            command_line = input(PROMPT)
+
+            mode = os.fstat(0).st_mode
+            if stat.S_ISFIFO(mode):  # stdin is piped
+                print(command_line)
+            elif stat.S_ISREG(mode):  # stdin is redirected
+                print(command_line)
+
+        except EOFError:  # If there is an EOFError then input was piped in and the shell should be terminated
             sys.exit(0)
 
-        # Turn commandLine input into words in list
-        args = get_args_from_string(commandLine)
+        # Turn command_line input into words in list
+        args = get_args_from_string(command_line)
 
         # Set ampersand flag
         if "&" == args[-1]:
@@ -125,8 +140,7 @@ def main():
         if not builtin:
             execute_args(args)
 
-
-
+        #Parent continues here
 
         # Wait for the command if no ampersand and not built in
         if amper == False:
