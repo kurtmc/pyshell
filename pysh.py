@@ -8,6 +8,8 @@ import shlex
 
 history = list()
 
+PROMPT = "psh> "
+
 def is_builtin(command):
     if command in ["cd", "history", "h", "exit"]:
         return True
@@ -83,16 +85,24 @@ def main():
     #stdscr = curses.initscr()
 
     for line in fileinput.input():
-        pass
+        sys.stdout.write(PROMPT + line)
+        execute_args(get_args_from_string(line))
+        try:
+            os.wait()
+        except ChildProcessError:
+            pass
 
     while True:
 
         # Read in command
-        commandLine = input("psh> ")
+        try:
+            commandLine = input(PROMPT)
+        except EOFError: # If there is an EOFError then input was piped in and the shell should be terminated
+            sys.exit(0)
 
         # Turn commandLine input into words in list
         args = get_args_from_string(commandLine)
-        
+
         # Set ampersand flag
         if "&" == args[-1]:
             amper = True
