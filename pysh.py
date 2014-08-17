@@ -1,9 +1,7 @@
 #!/usr/bin/python3
-import curses
 import fileinput
 import os
 import sys
-from prompt import Prompt
 import shlex
 
 history = list()
