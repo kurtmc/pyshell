@@ -62,17 +62,12 @@ def execute_args(args):
 
             if os.fork() == 0:  # Child process
                 # First component of command line
-
-                #os.close(sys.stdout)
-                #os.open(write)
-                #sys.stdout.close()
                 os.dup2(write, sys.stdout.fileno())
                 # stdout now goes to pipe
                 # child process does command
                 os.execvp(first_command, first_args)
 
             # Second component of command line
-            #sys.stdin.close()
             os.dup2(read, sys.stdin.fileno())
             # standard input now comes from the pipe
 
