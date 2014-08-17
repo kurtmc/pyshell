@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import curses
 import os
+import sys
 from prompt import Prompt
 import shlex
 
@@ -36,35 +37,35 @@ def do_builtin(args):
     if args[0] == "exit":
         exit()
 
+
 def execute_args(args):
     # store command in history
     global history
     history.append(args)
 
 
-    # If it is a built in command it can be done in the parent?
-    if is_builtin(args[0]):
-        do_builtin(args)
-    else:  # Else do things in the child process
-        pid = os.fork()
-        if pid == 0:
-            if "|" in args:
+    pid = os.fork()
+    if pid == 0:
+        if "|" in args:
 
-                (read, write) = os.pipe()
+            (read, write) = os.pipe()
 
-                if os.fork() == 0: # Child process
-                    os.close(read)
-                    write = os.fdopen(write, 'w')
+            if os.fork() == 0: # Child process
+                os.close(read)
+                write = os.fdopen(write, 'w')
 
-                    os.execlp(args)
+                os.execlp(args)
 
-                os.close(write)
-                read = os.fdopen(read)
+            os.close(write)
+            read = os.fdopen(read)
 
-
-            # Check if command ins build in and execute, else use os.execvp
-            if not is_builtin(args[0]):
-                os.execvp(args[0], args)
+        # If it is a built in command it can be done in the parent?
+        if is_builtin(args[0]):
+            do_builtin(args)
+            sys.exit(0) # Kill the child process
+        # Check if command ins build in and execute, else use os.execvp
+        if not is_builtin(args[0]):
+            os.execvp(args[0], args)
 
 
 def main():
@@ -92,8 +93,21 @@ def main():
         else:
             amper = False
 
+        # Flag for built in command
+        builtin = False
 
-        execute_args(args)
+        # Special cases:
+        # for command for exit command
+        if args[0] == "exit":
+            do_builtin(args)
+            builtin = True
+
+        if args[0] == "cd":
+            do_builtin(args)
+            builtin = True
+
+        if not builtin:
+            execute_args(args)
 
 
 
