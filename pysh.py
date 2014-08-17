@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-import fileinput
 import os
 import stat
 import sys
@@ -20,7 +19,14 @@ def is_builtin(command):
 def do_builtin(args):
     # cd
     if args[0] == "cd":
-        os.chdir(args[1])
+        try:
+            # The correct behaviour of cd with no arguments is to cd to the users home directory (test2 is wrong)
+            if len(args) < 2:
+                os.chdir(os.path.expanduser("~"))
+            else:
+                os.chdir(args[1])
+        except FileNotFoundError:
+            print("cd: " + args[1] + ": No such file or directory")
 
     # history
     if (args[0] == "history" or args[0] == "h") and len(args[1:]) == 0:
