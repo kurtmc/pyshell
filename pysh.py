@@ -5,6 +5,8 @@ import sys
 import shlex
 
 history = list()
+amper = False
+background_pid = 0
 
 PROMPT = "psh> "
 HOME = os.getcwd()
@@ -63,7 +65,10 @@ def execute_args(args):
         history.append(get_history_args(args[1]))
 
     pid = os.fork()
+    global background_pid
+    background_pid = pid
     if pid == 0:
+
         while "|" in args:  # Piping
             # Check the pipe syntax is correct
             if args[-1] == "|" or \
@@ -94,7 +99,6 @@ def execute_args(args):
             # standard input now comes from the pipe
 
 
-
         # If it is a built in command it can be done in the parent?
         if is_builtin(args[0]):
             do_builtin(args)
@@ -117,6 +121,8 @@ def main():
     # documentation https://docs.python.org/3.3/howto/curses.html
     # https://docs.python.org/3/library/curses.html
     # stdscr = curses.initscr()
+
+    global amper
 
     while True:
 
@@ -141,8 +147,7 @@ def main():
         # Set ampersand flag
         if "&" == args[-1]:
             amper = True
-            #args = args[:-1]
-            print(args)
+            args = args[:-1]
         else:
             amper = False
 
@@ -170,6 +175,9 @@ def main():
                 os.wait()
             except ChildProcessError:
                 pass
+        else:
+            global background_pid
+            print("[1]\t" + str(background_pid))
 
 
 if __name__ == "__main__":
