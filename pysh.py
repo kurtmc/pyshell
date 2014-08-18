@@ -18,13 +18,17 @@ BUILTIN_COMMANDS = ["cd", "history", "h", "exit", "jobs"]
 
 
 # Signal handlers
-#def ctrl_z_handle(signum, frame):
-#    pass
+def ctrl_z_handle(signum, frame):
+    print("Ctrl + Z was pressed")
+
+# This should probably kill a running process
 def ctrl_c_handle(signum, frame):
+    print()
     sys.exit(0)
 
+signal.signal(signal.SIGTSTP, ctrl_z_handle)
 signal.signal(signal.SIGINT, ctrl_c_handle)
-#signal.signal(signal.SIGSTOP, ctrl_z_handle)
+
 
 def is_builtin(command):
     if command in BUILTIN_COMMANDS:
