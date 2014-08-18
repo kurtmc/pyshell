@@ -7,6 +7,7 @@ import shlex
 history = list()
 
 PROMPT = "psh> "
+HOME = os.getcwd()
 
 
 def is_builtin(command):
@@ -29,9 +30,10 @@ def do_builtin(args):
     # cd
     if args[0] == "cd":
         try:
-            # The correct behaviour of cd with no arguments is to cd to the users home directory (test2 is wrong)
+            # The correct behaviour of cd with no arguments is to cd to the users home directory (but since the
+            # assignment has specified incorrect behaviour I suppose I can implement it)
             if len(args) < 2:
-                os.chdir(os.path.expanduser("~"))
+                os.chdir(HOME)
             else:
                 os.chdir(args[1])
         except FileNotFoundError:
@@ -136,7 +138,7 @@ def main():
         # Set ampersand flag
         if "&" == args[-1]:
             amper = True
-            args = args[:-1]
+            #args = args[:-1]
             print(args)
         else:
             amper = False
