@@ -62,6 +62,12 @@ def execute_args(args):
     pid = os.fork()
     if pid == 0:
         while "|" in args:  # Piping
+            # Check the pipe syntax is correct
+            if args[-1] == "|" or \
+                            "||" in args or \
+                            args[0] == "|":
+                print("Invalid use of pipe \"|\".")
+                sys.exit(1)
 
             pipe_index = args.index("|")
             first_command = args[0]
@@ -78,6 +84,7 @@ def execute_args(args):
                 # stdout now goes to pipe
                 # child process does command
                 os.execvp(first_command, first_args)
+
 
             # Second component of command line
             os.dup2(read, sys.stdin.fileno())
