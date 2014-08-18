@@ -7,6 +7,7 @@ import shlex
 history = list()
 amper = False
 background_pid = 0
+background_commands = dict()
 
 PROMPT = "psh> "
 HOME = os.getcwd()
@@ -116,15 +117,36 @@ def get_args_from_string(input_args):
     return args
 
 
+def check_for_nonrunning_processes():
+    global background_commands
+    jobs_to_remove = None
+    # Check if jobs are still active
+    if len(background_commands) > 0:
+        jobs_to_remove = list()
+        for job_no in background_commands:
+            #try:
+            print("PID to kill: " + str(background_commands[job_no][0]))
+            os.kill(background_commands[job_no][0], 0)
+            #except OSError:
+            #    jobs_to_remove.append(job_no)
+    if jobs_to_remove != None:
+        for item in jobs_to_remove:
+            background_commands.pop(item, 0)
+
+
 def main():
     # Setup curses
     # documentation https://docs.python.org/3.3/howto/curses.html
     # https://docs.python.org/3/library/curses.html
     # stdscr = curses.initscr()
 
+    # Declare all my nice global variables
     global amper
+    global background_pid
+    global background_commands
 
     while True:
+
 
         # Read in command
         try:
@@ -140,6 +162,8 @@ def main():
             sys.stdin = open("/dev/tty")
             if not STAY_IN_SHELL_AFTER_SCRIPT:
                 sys.exit(0)
+
+        check_for_nonrunning_processes()
 
         # Turn command_line input into words in list
         args = get_args_from_string(command_line)
@@ -176,8 +200,19 @@ def main():
             except ChildProcessError:
                 pass
         else:
-            global background_pid
-            print("[1]\t" + str(background_pid))
+            # Add processes to jobs
+            print("Before:")
+            print(background_commands)
+            print("Keys")
+            print(background_commands.keys())
+            if len(background_commands.keys()) == 0:
+                job_number = 1
+            else:
+                job_number = max(background_commands.keys()) + 1
+            background_commands[job_number] = (background_pid, args)
+            print("After:")
+            print(background_commands)
+            print("[" + str(job_number) + "]\t" + str(background_pid))
 
 
 if __name__ == "__main__":
