@@ -143,7 +143,9 @@ def check_for_nonrunning_processes():
             job_pid = background_commands[job_no][0]
             if get_state_of_pid(job_pid) == "Z":
                 jobs_to_remove.append(job_no)
+                os.waitpid(job_pid, 0) # Wait for the zombie
 
+    # Remove the zombies
     if len(jobs_to_remove) > 0:
         for item in jobs_to_remove:
             del background_commands[item]
