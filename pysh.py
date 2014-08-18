@@ -8,15 +8,16 @@ import subprocess
 history = list()
 amper = False
 background_pid = 0
-background_commands = dict()
+job_list = dict()
 
 PROMPT = "psh> "
 HOME = os.getcwd()
 STAY_IN_SHELL_AFTER_SCRIPT = True
+BUILTIN_COMMANDS = ["cd", "history", "h", "exit", "jobs"]
 
 
 def is_builtin(command):
-    if command in ["cd", "history", "h", "exit"]:
+    if command in BUILTIN_COMMANDS:
         return True
     else:
         return False
@@ -52,6 +53,13 @@ def do_builtin(args):
             print(str(i + 1) + ": " + str.join(" ", history[hist_len - for_range + i]))
     elif (args[0] == "history" or args[0] == "h") and len(args[1:]) != 0:
         execute_args(get_history_args(args[1]))
+
+    # jobs
+    if (args[0] == "jobs"):
+        for job_no in job_list:
+            job_pid = job_list[job_no][0]
+            job_command = str.join(" ", job_list[job_no][1])
+            print("[" + str(job_no) + "] <" + str(get_state_of_pid(job_pid)) + "> " + job_command + " &")
 
     # exit
     if args[0] == "exit":
@@ -129,26 +137,34 @@ def get_state_of_pid(pid):
     ps = subprocess.Popen(["ps", "-p", str(pid), "-o", "state="], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     result, error = ps.communicate()
     result = result.decode("utf-8").strip()
+
+    if result == "Z":
+        result = "Zombie"
+    elif result == "S":
+        result = "Sleeping"
+    elif result == "":
+        result = "Done"
+
     return result
 
 
 # Removes old and defunct processes from the jobs list
 def check_for_nonrunning_processes():
-    global background_commands
+    global job_list
     jobs_to_remove = list()
     # Check if jobs are still active
-    if len(background_commands) > 0:
+    if len(job_list) > 0:
         jobs_to_remove = list()
-        for job_no in background_commands:
-            job_pid = background_commands[job_no][0]
+        for job_no in job_list:
+            job_pid = job_list[job_no][0]
             if get_state_of_pid(job_pid) == "Z":
                 jobs_to_remove.append(job_no)
                 os.waitpid(job_pid, 0) # Wait for the zombie
 
     # Remove the zombies
-    if len(jobs_to_remove) > 0:
-        for item in jobs_to_remove:
-            del background_commands[item]
+    #if len(jobs_to_remove) > 0:
+    #    for item in jobs_to_remove:
+    #        del job_list[item]
 
 
 def main():
@@ -160,7 +176,7 @@ def main():
     # Declare all my nice global variables
     global amper
     global background_pid
-    global background_commands
+    global job_list
 
     while True:
 
@@ -169,6 +185,8 @@ def main():
         # Read in command
         try:
             command_line = input(PROMPT)
+            if command_line == "":  # Check if just enter was pressed
+                continue
 
             mode = os.fstat(0).st_mode
             if stat.S_ISFIFO(mode):  # stdin is piped
@@ -220,16 +238,16 @@ def main():
         else:
             # Add processes to jobs
             #print("Before:")
-            #print(background_commands)
+            #print(job_list)
             #print("Keys")
-            #print(background_commands.keys())
-            if len(background_commands.keys()) == 0:
+            #print(job_list.keys())
+            if len(job_list.keys()) == 0:
                 job_number = 1
             else:
-                job_number = max(background_commands.keys()) + 1
-            background_commands[job_number] = (background_pid, args)
+                job_number = max(job_list.keys()) + 1
+            job_list[job_number] = (background_pid, args)
             #print("After:")
-            #print(background_commands)
+            #print(job_list)
             print("[" + str(job_number) + "]\t" + str(background_pid))
 
 
