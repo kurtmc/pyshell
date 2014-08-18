@@ -4,6 +4,7 @@ import stat
 import sys
 import shlex
 import subprocess
+import signal
 
 history = list()
 amper = False
@@ -15,6 +16,15 @@ HOME = os.getcwd()
 STAY_IN_SHELL_AFTER_SCRIPT = True
 BUILTIN_COMMANDS = ["cd", "history", "h", "exit", "jobs"]
 
+
+# Signal handlers
+#def ctrl_z_handle(signum, frame):
+#    pass
+def ctrl_c_handle(signum, frame):
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, ctrl_c_handle)
+#signal.signal(signal.SIGSTOP, ctrl_z_handle)
 
 def is_builtin(command):
     if command in BUILTIN_COMMANDS:
