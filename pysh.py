@@ -16,6 +16,15 @@ def is_builtin(command):
         return False
 
 
+def get_history_args(select):
+    hist_len = len(history)
+    if hist_len < 11:
+        index = int(select) - 1
+    else:
+        index = int(select) - 10 + hist_len - 2
+    return history[index]
+
+
 def do_builtin(args):
     # cd
     if args[0] == "cd":
@@ -35,13 +44,7 @@ def do_builtin(args):
         for i in range(for_range):
             print(str(i + 1) + ": " + str.join(" ", history[hist_len - for_range + i]))
     elif (args[0] == "history" or args[0] == "h") and len(args[1:]) != 0:
-        hist_len = len(history)
-        if hist_len < 11:
-            index = int(args[1]) - 1
-        else:
-            index = int(args[1]) - 10 + hist_len - 2
-
-        execute_args(history[index])
+        execute_args(get_history_args(args[1]))
 
     # exit
     if args[0] == "exit":
@@ -51,7 +54,10 @@ def do_builtin(args):
 def execute_args(args):
     # store command in history
     global history
-    history.append(args)
+    if not (args[0] in ["h", "history"] and len(args) > 1 and args[1].isdigit()):
+        history.append(args)
+    else:
+        history.append(get_history_args(args[1]))
 
     pid = os.fork()
     if pid == 0:
@@ -63,7 +69,7 @@ def execute_args(args):
 
             args = args[pipe_index + 1:]
 
-            #pipe = os.pipe()
+            # pipe = os.pipe()
             (read, write) = os.pipe()
 
             if os.fork() == 0:  # Child process
@@ -144,7 +150,7 @@ def main():
         if not builtin:
             execute_args(args)
 
-        #Parent continues here
+        # Parent continues here
 
         # Wait for the command if no ampersand and not built in
         if amper == False:
