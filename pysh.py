@@ -8,6 +8,7 @@ history = list()
 
 PROMPT = "psh> "
 HOME = os.getcwd()
+STAY_IN_SHELL_AFTER_SCRIPT = True
 
 
 def is_builtin(command):
@@ -130,7 +131,9 @@ def main():
                 print(command_line)
 
         except EOFError:  # If there is an EOFError then input was piped in and the shell should be terminated
-            sys.exit(0)
+            sys.stdin = open("/dev/tty")
+            if not STAY_IN_SHELL_AFTER_SCRIPT:
+                sys.exit(0)
 
         # Turn command_line input into words in list
         args = get_args_from_string(command_line)
