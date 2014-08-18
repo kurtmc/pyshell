@@ -3,6 +3,7 @@ import os
 import stat
 import sys
 import shlex
+import subprocess
 
 history = list()
 amper = False
@@ -116,22 +117,36 @@ def get_args_from_string(input_args):
     args = list(lexer)
     return args
 
+def get_state_of_pid(pid):
+    # From the man page
+    # D    uninterruptible sleep (usually IO)
+    # R    running or runnable (on run queue)
+    # S    interruptible sleep (waiting for an event to complete)
+    # T    stopped, either by a job control signal or because it is being traced
+    # W    paging (not valid since the 2.6.xx kernel)
+    # X    dead (should never be seen)
+    # Z    defunct ("zombie") process, terminated but not reaped by its paren
+    ps = subprocess.Popen(["ps", "-p", str(pid), "-o", "state="], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    result, error = ps.communicate()
+    result = result.decode("utf-8").strip()
+    return result
 
+
+# Removes old and defunct processes from the jobs list
 def check_for_nonrunning_processes():
     global background_commands
-    jobs_to_remove = None
+    jobs_to_remove = list()
     # Check if jobs are still active
     if len(background_commands) > 0:
         jobs_to_remove = list()
         for job_no in background_commands:
-            #try:
-            print("PID to kill: " + str(background_commands[job_no][0]))
-            os.kill(background_commands[job_no][0], 0)
-            #except OSError:
-            #    jobs_to_remove.append(job_no)
-    if jobs_to_remove != None:
+            job_pid = background_commands[job_no][0]
+            if get_state_of_pid(job_pid) == "Z":
+                jobs_to_remove.append(job_no)
+
+    if len(jobs_to_remove) > 0:
         for item in jobs_to_remove:
-            background_commands.pop(item, 0)
+            del background_commands[item]
 
 
 def main():
@@ -146,6 +161,7 @@ def main():
     global background_commands
 
     while True:
+
 
 
         # Read in command
@@ -201,17 +217,17 @@ def main():
                 pass
         else:
             # Add processes to jobs
-            print("Before:")
-            print(background_commands)
-            print("Keys")
-            print(background_commands.keys())
+            #print("Before:")
+            #print(background_commands)
+            #print("Keys")
+            #print(background_commands.keys())
             if len(background_commands.keys()) == 0:
                 job_number = 1
             else:
                 job_number = max(background_commands.keys()) + 1
             background_commands[job_number] = (background_pid, args)
-            print("After:")
-            print(background_commands)
+            #print("After:")
+            #print(background_commands)
             print("[" + str(job_number) + "]\t" + str(background_pid))
 
 
