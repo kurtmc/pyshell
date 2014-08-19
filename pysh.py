@@ -289,12 +289,23 @@ def main():
             builtin = True
 
         # fg
-        if (args[0] == "fg"):
+        if (len(args) < 2 and args[0] == "fg"):
             job_pid = get_last_stopped_job_pid()
             #print(job_pid)
             os.kill(job_pid, signal.SIGCONT)
             amper = False  # a nice little hack
             #os.waitpid(job_pid, 0)
+            builtin = True
+        elif (len(args) >= 2 and args[0] == "fg"):
+            job_pid = get_job_pid(int(args[1]))
+            if job_pid is not None:
+                #print(job_pid)
+                os.kill(job_pid, signal.SIGCONT)
+                amper = False  # a nice little hack
+                #os.waitpid(job_pid, 0)
+            else:
+                print("There is no job " + args[1])
+                amper = True
             builtin = True
 
         if not builtin:
@@ -311,8 +322,9 @@ def main():
             except InterruptedError:
                 pass
         else:
-            # Add processes to jobs
-            add_to_job_list(background_pid, args)
+            if not builtin:
+                # Add processes to jobs
+                add_to_job_list(background_pid, args)
 
 
 
