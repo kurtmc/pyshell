@@ -61,6 +61,13 @@ def get_last_stopped_job_pid():
             last_stopped = job_list[job_no][0]
     return last_stopped
 
+def get_last_non_done_pid():
+    last = None
+    for job_no in job_list.keys():
+        if get_state_of_pid(job_list[job_no][0]) != "Done":
+            last = job_list[job_no][0]
+    return last
+
 
 def get_history_args(select):
     hist_len = len(history)
@@ -307,6 +314,21 @@ def main():
                 print("There is no job " + args[1])
                 amper = True
             builtin = True
+
+        # kill
+        if (len(args) >= 2 and args[0] == "kill"):
+            try:
+                os.kill(int(args[1]), signal.SIGKILL)
+            except ProcessLookupError:
+                print("Process number " + args[1] + " could not be found")
+            builtin = True
+        elif (len(args) < 2 and args[0] == "kill"):
+            try:
+                os.kill(get_last_non_done_pid(), signal.SIGKILL)
+            except TypeError:
+                print("No jobs to kill")
+            builtin = True
+
 
         if not builtin:
             execute_args(args)
