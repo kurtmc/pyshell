@@ -1,0 +1,45 @@
+1.
+Python code:
+=======================================
+pid = os.fork()
+# Fork the process (make an exact copy of the running process)
+if pid == 0: # if fork() returns 0 we are in the child process
+
+while "|" in args:  # While we are in piping mode
+    # Check the pipe syntax is correct
+    if args[-1] == "|" or \
+		    "||" in args or \
+		    args[0] == "|":
+	print("Invalid use of pipe \"|\".")
+	sys.exit(1)
+
+    pipe_index = args.index("|")
+    first_command = args[0]
+    first_args = args[0:pipe_index]
+
+    args = args[pipe_index + 1:]
+
+    (read, write) = os.pipe() # Create a new pipe
+
+    if os.fork() == 0:  # Fork process again
+	# Child process
+	# First component of command line
+	os.dup2(write, sys.stdout.fileno()) # replace stdout with the write end of the pipe
+	# stdout now goes to pipe
+	# child process does command
+	os.execvp(first_command, first_args) # Execute the program and finish
+
+
+    # Second component of command line
+    os.dup2(read, sys.stdin.fileno()) # Replace the stdin with the read end of the pipe
+    # standard input now comes from the pipe
+
+
+# Finally execute the last command
+if not is_builtin(args[0]):
+    os.execvp(args[0], args)
+
+2.
+When cd .. | pwd is run the first command is run in a child process of the parent and therefore when the child
+process finished it does not change the current working directory of the parent process.
+When cd .. is run without a pipe it is executed in the parent thus changing the parents current working directory.
