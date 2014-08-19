@@ -20,9 +20,13 @@ BUILTIN_COMMANDS = ["cd", "history", "h", "exit", "jobs", "fg", "bg", "kill"]
 
 # Signal handlers
 def ctrl_z_handle(signum, frame):
-    os.kill(background_pid, signal.SIGTSTP)
+    if get_last_stopped_job_pid() is not None:
+        os.kill(get_last_stopped_job_pid(), signal.SIGTSTP)
+    else:
+        os.kill(background_pid, signal.SIGTSTP)
     global current_args
-    add_to_job_list(background_pid, current_args)
+    if current_args[0] not in BUILTIN_COMMANDS:
+        add_to_job_list(background_pid, current_args)
 
 # This should probably kill a running process
 def ctrl_c_handle(signum, frame):
