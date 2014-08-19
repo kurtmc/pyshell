@@ -15,7 +15,7 @@ current_args = None
 PROMPT = "psh> "
 HOME = os.getcwd()
 STAY_IN_SHELL_AFTER_SCRIPT = True
-BUILTIN_COMMANDS = ["cd", "history", "h", "exit", "jobs"]
+BUILTIN_COMMANDS = ["cd", "history", "h", "exit", "jobs", "fg", "bg", "kill"]
 
 
 # Signal handlers
@@ -46,6 +46,14 @@ def add_to_job_list(job_pid, job_args):
         job_number = max(job_list.keys()) + 1
     job_list[job_number] = (job_pid, job_args)
     print("[" + str(job_number) + "]\t" + str(job_pid))
+
+
+def get_last_stopped_job_pid():
+    last_stopped = None
+    for job_no in job_list.keys():
+        if get_state_of_pid(job_list[job_no][0]) == "Stopped":
+            last_stopped = job_list[job_no][0]
+    return last_stopped
 
 
 def get_history_args(select):
@@ -85,6 +93,15 @@ def do_builtin(args):
             job_pid = job_list[job_no][0]
             job_command = str.join(" ", job_list[job_no][1])
             print("[" + str(job_no) + "] <" + str(get_state_of_pid(job_pid)) + "> " + job_command + " &")
+
+
+    # bg
+    if (args[0] == "bg"):
+        os.kill(get_last_stopped_job_pid(), signal.SIGCONT)
+
+    # kill
+    if (args[0] == "kill"):
+        pass
 
     # exit
     if args[0] == "exit":
@@ -248,14 +265,24 @@ def main():
         # Flag for built in command
         builtin = False
 
-        # Special cases:
+        # Special cases in parent process
         # for command for exit command
         if args[0] == "exit":
             do_builtin(args)
             builtin = True
 
+        # cd
         if args[0] == "cd":
             do_builtin(args)
+            builtin = True
+
+        # fg
+        if (args[0] == "fg"):
+            job_pid = get_last_stopped_job_pid()
+            #print(job_pid)
+            os.kill(job_pid, signal.SIGCONT)
+            amper = False  # a nice little hack
+            #os.waitpid(job_pid, 0)
             builtin = True
 
         if not builtin:
