@@ -10,6 +10,7 @@ history = list()
 amper = False
 background_pid = 0
 job_list = dict()
+current_args = None
 
 PROMPT = "psh> "
 HOME = os.getcwd()
@@ -20,6 +21,8 @@ BUILTIN_COMMANDS = ["cd", "history", "h", "exit", "jobs"]
 # Signal handlers
 def ctrl_z_handle(signum, frame):
     os.kill(background_pid, signal.SIGTSTP)
+    global current_args
+    add_to_job_list(background_pid, current_args)
 
 # This should probably kill a running process
 def ctrl_c_handle(signum, frame):
@@ -164,6 +167,8 @@ def get_state_of_pid(pid):
         result = "Zombie"
     elif result == "S":
         result = "Sleeping"
+    elif result == "T":
+        result = "Stopped"
     elif result == "":
         result = "Done"
 
@@ -228,6 +233,10 @@ def main():
 
         # Turn command_line input into words in list
         args = get_args_from_string(command_line)
+
+        # Update the args of the current command
+        global current_args
+        current_args = args
 
         # Set ampersand flag
         if "&" == args[-1]:
