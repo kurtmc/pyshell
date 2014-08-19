@@ -47,6 +47,12 @@ def add_to_job_list(job_pid, job_args):
     job_list[job_number] = (job_pid, job_args)
     print("[" + str(job_number) + "]\t" + str(job_pid))
 
+def get_job_pid(job_no):
+    if job_no in job_list.keys():
+        return job_list[job_no][0]
+    else:
+        return None
+
 
 def get_last_stopped_job_pid():
     last_stopped = None
@@ -96,8 +102,14 @@ def do_builtin(args):
 
 
     # bg
-    if (args[0] == "bg"):
+    if (len(args) < 2 and args[0] == "bg"):
         os.kill(get_last_stopped_job_pid(), signal.SIGCONT)
+    elif (len(args) >= 2 and args[0] == "bg"):
+        job_pid = get_job_pid(int(args[1]))
+        if job_pid != None:
+            os.kill(job_pid, signal.SIGCONT)
+        else:
+            print("There is no job " + str(args[1]))
 
     # kill
     if (args[0] == "kill"):
@@ -306,4 +318,8 @@ def main():
 
 
 if __name__ == "__main__":
+    #while True:
+        #try:
     main()
+        #except:
+        #    pass
