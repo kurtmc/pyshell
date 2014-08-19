@@ -19,7 +19,7 @@ BUILTIN_COMMANDS = ["cd", "history", "h", "exit", "jobs"]
 
 # Signal handlers
 def ctrl_z_handle(signum, frame):
-    print("Ctrl + Z was pressed")
+    os.kill(background_pid, signal.SIGTSTP)
 
 # This should probably kill a running process
 def ctrl_c_handle(signum, frame):
@@ -35,6 +35,14 @@ def is_builtin(command):
         return True
     else:
         return False
+
+def add_to_job_list(job_pid, job_args):
+    if len(job_list.keys()) == 0:
+        job_number = 1
+    else:
+        job_number = max(job_list.keys()) + 1
+    job_list[job_number] = (job_pid, job_args)
+    print("[" + str(job_number) + "]\t" + str(job_pid))
 
 
 def get_history_args(select):
@@ -162,6 +170,9 @@ def get_state_of_pid(pid):
     return result
 
 
+
+
+
 # Removes old and defunct processes from the jobs list
 def check_for_nonrunning_processes():
     global job_list
@@ -249,20 +260,13 @@ def main():
                 os.wait()
             except ChildProcessError:
                 pass
+            except InterruptedError:
+                pass
         else:
             # Add processes to jobs
-            #print("Before:")
-            #print(job_list)
-            #print("Keys")
-            #print(job_list.keys())
-            if len(job_list.keys()) == 0:
-                job_number = 1
-            else:
-                job_number = max(job_list.keys()) + 1
-            job_list[job_number] = (background_pid, args)
-            #print("After:")
-            #print(job_list)
-            print("[" + str(job_number) + "]\t" + str(background_pid))
+            add_to_job_list(background_pid, args)
+
+
 
 
 if __name__ == "__main__":
